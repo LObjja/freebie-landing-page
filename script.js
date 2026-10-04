@@ -1,4 +1,5 @@
-// burger
+
+// Burger
 
 const burger = document.getElementById("burger");
 const header = document.querySelector(".header");
@@ -15,7 +16,10 @@ burger.addEventListener("click", () => {
     const isOpen = header.classList.contains("open");
 
     burger.setAttribute("aria-expanded", isOpen);
-    burger.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+    burger.setAttribute(
+        "aria-label",
+        isOpen ? "Close menu" : "Open menu"
+    );
 });
 
 window.addEventListener("keydown", (e) => {
@@ -25,199 +29,284 @@ window.addEventListener("keydown", (e) => {
 });
 
 
-// hero slider
+// Hero slider
 
-const content = document.querySelector(".content");
-const labels = [...document.querySelectorAll(".buttons label")];
-const inputs = [...document.querySelectorAll(".tabs input")];
+const heroSlider = document.querySelector(".slider__container");
+const heroContent = document.querySelector(".content");
+const heroSlides = Array.from(
+    document.querySelectorAll(".content .box")
+);
+const heroLabels = Array.from(
+    document.querySelectorAll(".buttons label")
+);
+const heroInputs = Array.from(
+    document.querySelectorAll(".tabs input")
+);
 
-let index = inputs.findIndex(i => i.checked);
+let heroIndex = heroInputs.findIndex(input => input.checked);
 
-if (index === -1) {
-    inputs[0].checked = true;
-    index = 0;
+if (heroIndex < 0) {
+    heroIndex = 0;
 }
 
-const setSlide = (i, animate = true) => {
-    const slideWidth = content.querySelector(".box").offsetWidth;
+let heroDragging = false;
+let heroStartX = 0;
+let heroStartY = 0;
+let heroCurrentX = 0;
 
-    index = (i + labels.length) % labels.length;
+function getHeroWidth() {
+    return heroSlider.clientWidth;
+}
 
-    inputs[index].checked = true;
+function moveHero(index, animate = true) {
+    heroIndex =
+        (index + heroSlides.length) % heroSlides.length;
 
-    content.style.transition = animate ? "left 0.5s ease" : "none";
-    content.style.left = (-index * slideWidth) + "px";
-};
+    const width = getHeroWidth();
 
-setSlide(index, false);
+    heroContent.style.transition = animate
+        ? "transform 0.5s ease"
+        : "none";
 
-labels.forEach((label, i) => {
-    label.addEventListener("click", () => setSlide(i));
+    heroContent.style.transform =
+        `translate3d(${-heroIndex * width}px, 0, 0)`;
+
+    if (heroInputs[heroIndex]) {
+        heroInputs[heroIndex].checked = true;
+    }
+}
+
+moveHero(heroIndex, false);
+
+heroLabels.forEach((label, i) => {
+    label.addEventListener("click", () => {
+        moveHero(i);
+    });
 });
 
-let isDragging = false;
-let startX = 0;
+heroContent.addEventListener("pointerdown", (e) => {
+    heroDragging = true;
 
-content.addEventListener("pointerdown", e => {
-    isDragging = true;
-    startX = e.clientX;
+    heroStartX = e.clientX;
+    heroStartY = e.clientY;
+    heroCurrentX = e.clientX;
 
-    content.setPointerCapture(e.pointerId);
-    content.style.transition = "none";
+    heroContent.setPointerCapture(e.pointerId);
+
+    heroContent.style.transition = "none";
 
     e.preventDefault();
 });
 
-content.addEventListener("pointermove", e => {
-    if (!isDragging) return;
+heroContent.addEventListener("pointermove", (e) => {
+    if (!heroDragging) return;
 
-    const diff = e.clientX - startX;
-    const slideWidth = content.querySelector(".box").offsetWidth;
+    heroCurrentX = e.clientX;
 
-    content.style.left = (-index * slideWidth + diff) + "px";
+    const diffX = e.clientX - heroStartX;
+    const diffY = e.clientY - heroStartY;
+
+    if (Math.abs(diffY) > Math.abs(diffX)) {
+        return;
+    }
+
+    const width = getHeroWidth();
+
+    heroContent.style.transform =
+        `translate3d(${-heroIndex * width + diffX}px, 0, 0)`;
 });
 
-const endDrag = e => {
-    if (!isDragging) return;
+function endHeroDrag(e) {
+    if (!heroDragging) return;
 
-    isDragging = false;
+    heroDragging = false;
 
-    const diff = e.clientX - startX;
-    const threshold = 100;
+    const diff = heroCurrentX - heroStartX;
+    const threshold = 50;
 
-    if (diff > threshold) {
-        setSlide(index - 1);
-    } else if (diff < -threshold) {
-        setSlide(index + 1);
+    if (diff < -threshold) {
+        moveHero(heroIndex + 1);
+    } else if (diff > threshold) {
+        moveHero(heroIndex - 1);
     } else {
-        setSlide(index);
+        moveHero(heroIndex);
     }
 
     try {
-        content.releasePointerCapture(e.pointerId);
+        heroContent.releasePointerCapture(e.pointerId);
     } catch {}
-};
+}
 
-content.addEventListener("pointerup", endDrag);
-content.addEventListener("pointercancel", endDrag);
+heroContent.addEventListener("pointerup", endHeroDrag);
+heroContent.addEventListener("pointercancel", endHeroDrag);
 
-window.addEventListener("resize", () => setSlide(index, false));
+window.addEventListener("resize", () => {
+    moveHero(heroIndex, false);
+});
 
 
-// comments slider
+// Comments slider
 
-const commentsBox = document.querySelector(".comments-slider__box");
-const commentsSlides = Array.from(
+const commentsContainer = document.querySelector(
+    ".comments-slider__content"
+);
+
+const commentsBox = document.querySelector(
+    ".comments-slider__box"
+);
+
+const originalComments = Array.from(
     document.querySelectorAll(".comments-slider__item")
 );
 
-const prevBtn = document.querySelector(".comments-slider__button-left");
-const nextBtn = document.querySelector(".comments-slider__button-right");
+const prevBtn = document.querySelector(
+    ".comments-slider__button-left"
+);
+
+const nextBtn = document.querySelector(
+    ".comments-slider__button-right"
+);
+
+const firstCommentClone =
+    originalComments[0].cloneNode(true);
+
+const lastCommentClone =
+    originalComments[originalComments.length - 1]
+        .cloneNode(true);
+
+commentsBox.appendChild(firstCommentClone);
+
+commentsBox.insertBefore(
+    lastCommentClone,
+    originalComments[0]
+);
+
+const commentsSlides =
+    Array.from(commentsBox.children);
 
 let commentsIndex = 1;
-let commentsTransitioning = false;
+let commentsAnimating = false;
 
-const firstClone = commentsSlides[0].cloneNode(true);
-const lastClone = commentsSlides[commentsSlides.length - 1].cloneNode(true);
+function moveComments(index, animate = true) {
 
-commentsBox.appendChild(firstClone);
-commentsBox.insertBefore(lastClone, commentsSlides[0]);
+    const width = commentsContainer.clientWidth;
 
-const allSlides = Array.from(commentsBox.children);
+    commentsBox.style.transition = animate
+        ? "transform 0.5s ease"
+        : "none";
 
-commentsBox.style.display = "flex";
-commentsBox.style.transition = "transform 0.5s ease";
-commentsBox.style.transform =
-    `translateX(-${commentsIndex * 100}%)`;
-
-function goToCommentsSlide(i) {
-    if (commentsTransitioning) return;
-
-    commentsTransitioning = true;
-    commentsIndex = i;
-
-    commentsBox.style.transition = "transform 0.5s ease";
     commentsBox.style.transform =
-        `translateX(-${commentsIndex * 100}%)`;
+        `translate3d(${-index * width}px, 0, 0)`;
+
+    commentsIndex = index;
 }
 
-commentsBox.addEventListener("transitionend", () => {
-    if (allSlides[commentsIndex] === firstClone) {
-        commentsBox.style.transition = "none";
-        commentsIndex = 1;
-        commentsBox.style.transform =
-            `translateX(-${commentsIndex * 100}%)`;
-    }
-
-    if (allSlides[commentsIndex] === lastClone) {
-        commentsBox.style.transition = "none";
-        commentsIndex = commentsSlides.length;
-        commentsBox.style.transform =
-            `translateX(-${commentsIndex * 100}%)`;
-    }
-
-    commentsPrevTranslate = -commentsIndex * 100;
-    commentsTransitioning = false;
-});
+moveComments(commentsIndex, false);
 
 prevBtn.addEventListener("click", () => {
-    goToCommentsSlide(commentsIndex - 1);
+
+    if (commentsAnimating) return;
+
+    commentsAnimating = true;
+
+    moveComments(commentsIndex - 1);
 });
 
 nextBtn.addEventListener("click", () => {
-    goToCommentsSlide(commentsIndex + 1);
+
+    if (commentsAnimating) return;
+
+    commentsAnimating = true;
+
+    moveComments(commentsIndex + 1);
+});
+
+commentsBox.addEventListener("transitionend", () => {
+
+    if (
+        commentsSlides[commentsIndex] ===
+        firstCommentClone
+    ) {
+        moveComments(1, false);
+    }
+
+    if (
+        commentsSlides[commentsIndex] ===
+        lastCommentClone
+    ) {
+        moveComments(originalComments.length, false);
+    }
+
+    commentsAnimating = false;
 });
 
 let commentsDragging = false;
 let commentsStartX = 0;
-let commentsCurrentTranslate = 0;
-let commentsPrevTranslate = -commentsIndex * 100;
+let commentsCurrentX = 0;
 
-commentsBox.addEventListener("pointerdown", e => {
-    if (commentsTransitioning) return;
+commentsBox.addEventListener("pointerdown", (e) => {
+
+    if (commentsAnimating) return;
 
     commentsDragging = true;
+
     commentsStartX = e.clientX;
+    commentsCurrentX = e.clientX;
 
     commentsBox.setPointerCapture(e.pointerId);
+
     commentsBox.style.transition = "none";
 
     e.preventDefault();
 });
 
-commentsBox.addEventListener("pointermove", e => {
+commentsBox.addEventListener("pointermove", (e) => {
+
     if (!commentsDragging) return;
 
-    const diff = e.clientX - commentsStartX;
-    const slideWidth = commentsBox.parentElement.offsetWidth;
+    commentsCurrentX = e.clientX;
 
-    commentsCurrentTranslate =
-        commentsPrevTranslate + (diff / slideWidth) * 100;
+    const diff = e.clientX - commentsStartX;
+    const width = commentsContainer.clientWidth;
 
     commentsBox.style.transform =
-        `translateX(${commentsCurrentTranslate}%)`;
+        `translate3d(${-commentsIndex * width + diff}px, 0, 0)`;
 });
 
-const endCommentsDrag = e => {
+function endCommentsDrag(e) {
+
     if (!commentsDragging) return;
 
     commentsDragging = false;
 
-    const diff = e.clientX - commentsStartX;
+    const diff = commentsCurrentX - commentsStartX;
     const threshold = 50;
 
-    if (diff > threshold) {
-        goToCommentsSlide(commentsIndex - 1);
-    } else if (diff < -threshold) {
-        goToCommentsSlide(commentsIndex + 1);
+    if (diff < -threshold) {
+        commentsAnimating = true;
+        moveComments(commentsIndex + 1);
+    } else if (diff > threshold) {
+        commentsAnimating = true;
+        moveComments(commentsIndex - 1);
     } else {
-        goToCommentsSlide(commentsIndex);
+        moveComments(commentsIndex);
     }
 
     try {
         commentsBox.releasePointerCapture(e.pointerId);
     } catch {}
-};
+}
 
-commentsBox.addEventListener("pointerup", endCommentsDrag);
-commentsBox.addEventListener("pointercancel", endCommentsDrag);
+commentsBox.addEventListener(
+    "pointerup",
+    endCommentsDrag
+);
+
+commentsBox.addEventListener(
+    "pointercancel",
+    endCommentsDrag
+);
+
+window.addEventListener("resize", () => {
+    moveComments(commentsIndex, false);
+});

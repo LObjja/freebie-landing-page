@@ -214,11 +214,11 @@ body {
 
 
 .content {
-  position: relative;
-  left: 0;
-  width: 300vw;
-  display: flex;
-  transition: left 0.5s ease;
+    position: relative;
+    width: 300vw;
+    display: flex;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
 }
 
 .content .box {
@@ -1078,14 +1078,17 @@ body {
 }
 
 .comments-slider__box {
-  display: flex;
+    display: flex;
+    width: 100%;
+    will-change: transform;
 }
 
 .comments-slider__item {
-  text-align: center;
-  align-items: center;
-  flex: 0 0 100%;
-  box-sizing: border-box;
+    text-align: center;
+    align-items: center;
+    flex: 0 0 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .comments-slider__item p {
@@ -1318,4 +1321,10 @@ body {
 .content,
 .comments-slider__box {
     touch-action: pan-y;
+    cursor: grab;
+}
+
+.content:active,
+.comments-slider__box:active {
+    cursor: grabbing;
 }
