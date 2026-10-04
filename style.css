@@ -1314,3 +1314,8 @@ body {
     font-size: 11px;
   }
 }
+
+.content,
+.comments-slider__box {
+    touch-action: pan-y;
+}
