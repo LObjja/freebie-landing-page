@@ -19,3 +19,7 @@ Responsive landing page built with HTML, CSS and JavaScript.
 - Hover animations
 - Responsive layout
 - Keyboard navigation with Escape
+
+## Live Demo
+
+[View Live Website](https://lobjja.github.io/freebie-landing-page/)
